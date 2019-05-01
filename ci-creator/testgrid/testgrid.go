@@ -1,6 +1,7 @@
 package testgrid
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	yaml "gopkg.in/yaml.v2"
@@ -8,23 +9,24 @@ import (
 
 type TestgridConfig struct {
 	// TestGroups []TestGroup `yaml:"test_groups"`
-	Dashboards []Dashboard `yaml:"dashboards"`
+	Dashboards      []Dashboard      `yaml:"dashboards"`
+	DashboardGroups []DashboardGroup `yaml:"dashboard_groups"`
 }
 
-// type TestGroup struct {
-// 	Name      string `yaml:"name"`
-// 	GcsPrefix string `yaml:"gcs_prefix"`
-// }
-
 type Dashboard struct {
-	Name         string       `yaml:"name"`
-	DashboardTab DashboardTab `yaml:"dashboard_tab,omitempty"`
+	Name         string         `yaml:"name"`
+	DashboardTab []DashboardTab `yaml:"dashboard_tab"`
 }
 
 type DashboardTab struct {
 	Name          string `yaml:"name"`
 	Description   string `yaml:"description,omitempty"`
 	TestGroupName string `yaml:"test_group_name,omitempty"`
+}
+
+type DashboardGroup struct {
+	Name           string
+	DashboardNames []string
 }
 
 func check(e error) {
@@ -42,6 +44,12 @@ func GenerateTestgrid(upcomingRelease string) (TestgridConfig, error) {
 
 	err = yaml.Unmarshal([]byte(data), &testgridConfig)
 	check(err)
+
+	dashboardForUpcomingRelease := Dashboard{
+		Name: fmt.Sprintf("sig-release-%s-blocking", upcomingRelease),
+	}
+
+	testgridConfig.Dashboards = append(testgridConfig.Dashboards, dashboardForUpcomingRelease)
 
 	return testgridConfig, err
 }
