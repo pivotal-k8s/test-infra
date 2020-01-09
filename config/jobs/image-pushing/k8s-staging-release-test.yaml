@@ -80,96 +80,59 @@ periodics:
     testgrid-alert-email: release-managers@kubernetes.io
     description: 'Ends up running: make quick-release'
 
+# x-releng-config is not used by prow, we just use that here to have a
+# container for all the yaml anchors we want to reuse later.
+x-releng-config:
+  default-image-builder-container: &default-image-builder-container
+    image: gcr.io/k8s-testimages/image-builder:v20200107-6bdb17e
+    command:
+      - /run.sh
+    args:
+      - --project=k8s-staging-release-test
+      - --scratch-bucket=gs://k8s-staging-release-test-gcb
+      - --env-passthrough=PULL_BASE_REF
+      - $(IMAGE_SRC_DIR)
+  default-image-builder-job: &default-image-builder-job
+    cluster: test-infra-trusted
+    labels:
+      preset-releng-creds: "true"
+      preset-releng-log-to-stdout: "true"
+    annotations:
+      testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
+      testgrid-alert-email: release-managers@kubernetes.io
+    decorate: true
+    branches: [ ^master$ ]
+
 postsubmits:
   kubernetes/release:
     - name: post-release-push-image-k8s-cloud-builder
-      cluster: test-infra-trusted
-      labels:
-        preset-releng-creds: "true"
-        preset-releng-log-to-stdout: "true"
-      annotations:
-        testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
-        testgrid-alert-email: release-managers@kubernetes.io
-      decorate: true
+      <<: *default-image-builder-job
       run_if_changed: '^images\/'
-      branches:
-        - ^master$
       spec:
         containers:
-          - image: gcr.io/k8s-testimages/image-builder:v20200107-6bdb17e
-            command:
-              - /run.sh
-            args:
-              - --project=k8s-staging-release-test
-              - --scratch-bucket=gs://k8s-staging-release-test-gcb
-              - --env-passthrough=PULL_BASE_REF
-              - images/k8s-cloud-builder
+          - <<: *default-image-builder-container
+            env: [{ name: IMAGE_SRC_DIR, value: images/k8s-cloud-builder }]
 
     - name: post-release-push-image-releng-ci-bazel
-      cluster: test-infra-trusted
-      labels:
-        preset-releng-creds: "true"
-        preset-releng-log-to-stdout: "true"
-      annotations:
-        testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
-        testgrid-alert-email: release-managers@kubernetes.io
-      decorate: true
+      <<: *default-image-builder-job
       run_if_changed: '^images\/'
-      branches:
-        - ^master$
       spec:
         containers:
-          - image: gcr.io/k8s-testimages/image-builder:v20200107-6bdb17e
-            command:
-              - /run.sh
-            args:
-              - --project=k8s-staging-release-test
-              - --scratch-bucket=gs://k8s-staging-release-test-gcb
-              - --env-passthrough=PULL_BASE_REF
-              - images/releng-ci-bazel
+        - <<: *default-image-builder-container
+          env: [{ name: IMAGE_SRC_DIR, value: images/releng-ci-bazel }]
 
     - name: post-release-push-image-deb-builder
-      cluster: test-infra-trusted
-      labels:
-        preset-releng-creds: "true"
-        preset-releng-log-to-stdout: "true"
-      annotations:
-        testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
-        testgrid-alert-email: release-managers@kubernetes.io
-      decorate: true
+      <<: *default-image-builder-job
       run_if_changed: '^build\/'
-      branches:
-        - ^master$
       spec:
         containers:
-          - image: gcr.io/k8s-testimages/image-builder:v20200107-6bdb17e
-            command:
-              - /run.sh
-            args:
-              - --project=k8s-staging-release-test
-              - --scratch-bucket=gs://k8s-staging-release-test-gcb
-              - --env-passthrough=PULL_BASE_REF
-              - build/debs
+        - <<: *default-image-builder-container
+          env: [{ name: IMAGE_SRC_DIR, value: build/debs }]
 
     - name: post-release-push-image-rpm-builder
-      cluster: test-infra-trusted
-      labels:
-        preset-releng-creds: "true"
-        preset-releng-log-to-stdout: "true"
-      annotations:
-        testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
-        testgrid-alert-email: release-managers@kubernetes.io
-      decorate: true
+      <<: *default-image-builder-job
       run_if_changed: '^build\/'
-      branches:
-        - ^master$
       spec:
         containers:
-          - image: gcr.io/k8s-testimages/image-builder:v20200107-6bdb17e
-            command:
-              - /run.sh
-            args:
-              - --project=k8s-staging-release-test
-              - --scratch-bucket=gs://k8s-staging-release-test-gcb
-              - --env-passthrough=PULL_BASE_REF
-              - build/rpms
+        - <<: *default-image-builder-container
+          env: [{ name: IMAGE_SRC_DIR, value: build/rpms }]
