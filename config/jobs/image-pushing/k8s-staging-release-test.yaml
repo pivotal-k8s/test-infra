@@ -1,9 +1,31 @@
+presets:
+- labels:
+    preset-releng-creds: "true"
+  env:
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: /creds/service-account.json
+  volumeMounts:
+    - name: creds
+      mountPath: /creds
+  volumes:
+    - name: creds
+      secret:
+        secretName: deployer-service-account
+- labels:
+    preset-releng-log-to-stdout: "true"
+  env:
+    - name: LOG_TO_STDOUT
+      value: "y"
+
 periodics:
 # TODO(justaugustus): Decrease interval to 1hr once we cut build over to k8s-infra.
 #                     ref: https://github.com/kubernetes/release/issues/911
 - interval: 4h
   name: ci-kubernetes-prototype-build
   cluster: test-infra-trusted
+  labels:
+    preset-releng-creds: "true"
+    preset-releng-log-to-stdout: "true"
   decorate: true
   extra_refs:
   - org: kubernetes
@@ -21,18 +43,6 @@ periodics:
         - --variant=build-ci
         - --no-source
         - gcb/build
-      env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /creds/service-account.json
-        - name: LOG_TO_STDOUT
-          value: "y"
-      volumeMounts:
-        - name: creds
-          mountPath: /creds
-    volumes:
-      - name: creds
-        secret:
-          secretName: deployer-service-account
   annotations:
     # TODO(justaugustus): Enable forking for prototype GCB-based build jobs.
     testgrid-dashboards: sig-release-prototype-master-blocking
@@ -44,6 +54,9 @@ periodics:
 - interval: 12h
   name: ci-kubernetes-prototype-build-fast
   cluster: test-infra-trusted
+  labels:
+    preset-releng-creds: "true"
+    preset-releng-log-to-stdout: "true"
   decorate: true
   extra_refs:
   - org: kubernetes
@@ -61,18 +74,6 @@ periodics:
         - --variant=build-ci-fast
         - --no-source
         - gcb/build
-      env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /creds/service-account.json
-        - name: LOG_TO_STDOUT
-          value: "y"
-      volumeMounts:
-        - name: creds
-          mountPath: /creds
-    volumes:
-      - name: creds
-        secret:
-          secretName: deployer-service-account
   annotations:
     testgrid-dashboards: sig-release-prototype-master-blocking
     testgrid-tab-name: build-master-fast
@@ -83,6 +84,9 @@ postsubmits:
   kubernetes/release:
     - name: post-release-push-image-k8s-cloud-builder
       cluster: test-infra-trusted
+      labels:
+        preset-releng-creds: "true"
+        preset-releng-log-to-stdout: "true"
       annotations:
         testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
         testgrid-alert-email: release-managers@kubernetes.io
@@ -100,20 +104,12 @@ postsubmits:
               - --scratch-bucket=gs://k8s-staging-release-test-gcb
               - --env-passthrough=PULL_BASE_REF
               - images/k8s-cloud-builder
-            env:
-              - name: GOOGLE_APPLICATION_CREDENTIALS
-                value: /creds/service-account.json
-              - name: LOG_TO_STDOUT
-                value: "y"
-            volumeMounts:
-              - name: creds
-                mountPath: /creds
-        volumes:
-          - name: creds
-            secret:
-              secretName: deployer-service-account
+
     - name: post-release-push-image-releng-ci-bazel
       cluster: test-infra-trusted
+      labels:
+        preset-releng-creds: "true"
+        preset-releng-log-to-stdout: "true"
       annotations:
         testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
         testgrid-alert-email: release-managers@kubernetes.io
@@ -131,20 +127,12 @@ postsubmits:
               - --scratch-bucket=gs://k8s-staging-release-test-gcb
               - --env-passthrough=PULL_BASE_REF
               - images/releng-ci-bazel
-            env:
-              - name: GOOGLE_APPLICATION_CREDENTIALS
-                value: /creds/service-account.json
-              - name: LOG_TO_STDOUT
-                value: "y"
-            volumeMounts:
-              - name: creds
-                mountPath: /creds
-        volumes:
-          - name: creds
-            secret:
-              secretName: deployer-service-account
+
     - name: post-release-push-image-deb-builder
       cluster: test-infra-trusted
+      labels:
+        preset-releng-creds: "true"
+        preset-releng-log-to-stdout: "true"
       annotations:
         testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
         testgrid-alert-email: release-managers@kubernetes.io
@@ -162,20 +150,12 @@ postsubmits:
               - --scratch-bucket=gs://k8s-staging-release-test-gcb
               - --env-passthrough=PULL_BASE_REF
               - build/debs
-            env:
-              - name: GOOGLE_APPLICATION_CREDENTIALS
-                value: /creds/service-account.json
-              - name: LOG_TO_STDOUT
-                value: "y"
-            volumeMounts:
-              - name: creds
-                mountPath: /creds
-        volumes:
-          - name: creds
-            secret:
-              secretName: deployer-service-account
+
     - name: post-release-push-image-rpm-builder
       cluster: test-infra-trusted
+      labels:
+        preset-releng-creds: "true"
+        preset-releng-log-to-stdout: "true"
       annotations:
         testgrid-dashboards: sig-release-image-pushes, sig-release-master-informing
         testgrid-alert-email: release-managers@kubernetes.io
@@ -193,15 +173,3 @@ postsubmits:
               - --scratch-bucket=gs://k8s-staging-release-test-gcb
               - --env-passthrough=PULL_BASE_REF
               - build/rpms
-            env:
-              - name: GOOGLE_APPLICATION_CREDENTIALS
-                value: /creds/service-account.json
-              - name: LOG_TO_STDOUT
-                value: "y"
-            volumeMounts:
-              - name: creds
-                mountPath: /creds
-        volumes:
-          - name: creds
-            secret:
-              secretName: deployer-service-account
