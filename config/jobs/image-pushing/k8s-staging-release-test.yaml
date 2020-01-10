@@ -1,3 +1,9 @@
+# Test job generation with:
+#   go run prow/cmd/mkpj/main.go \
+#     -base-ref master -local -config-path config/prow/config.yaml \
+#     -job-config-path config/jobs/image-pushing/k8s-staging-release-test.yaml \
+#     -job post-release-push-image-k8s-cloud-builder
+
 presets:
 - labels:
     preset-releng-creds: "true"
